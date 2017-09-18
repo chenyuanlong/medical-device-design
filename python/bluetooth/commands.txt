@@ -1,0 +1,2 @@
+sudo gatttool -i hci0 -b D3:E0:D2:08:2B:8F -t random --interactive
+char-read-hnd 0x0029
