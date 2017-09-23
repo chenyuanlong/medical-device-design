@@ -16,7 +16,7 @@ ax.grid(True)
 ax.set_title("Realtime Heart Rate Waveform")
 ax.set_xlabel("Time")
 ax.set_ylabel("Amplitude")
-ax.axis([0,100,-1.5,1.5])
+ax.axis([0,100,0,1024])
 line1=ax.plot(xAchse,yAchse,'-')
 
 manager = pylab.get_current_fig_manager()
@@ -55,9 +55,11 @@ def SinwaveformGenerator(arg):
   #hr acquisition code
   gt.sendline("char-read-hnd 0x0029")
   gt.expect(r"Characteristic value/descriptor: .*", timeout=10)
-  hr = gt.after.decode().split('\n', 1)[0].split(' ', 1)[1].split(' ', 1)[1].split(' ', 1)[1]
+  hr = gt.after.decode().split('\n', 1)[0].split(' ', 1)[1].split(' ', 1)[1]
+  hr = [x for x in hr]
+  hr = hr[3]+hr[4]+hr[0]+hr[1]
   hr =  int("0x"+hr,16)
-  print("The heart rate is: "+str(hr))
+  print("The amplitude is: "+str(hr))
   Tnext = hr
   #hr acquisition code
   #Tnext=((constant*T1)*2)-T0
@@ -70,7 +72,7 @@ def RealtimePloter(arg):
   global values
   CurrentXAxis=pylab.arange(len(values)-100,len(values),1)
   line1[0].set_data(CurrentXAxis,pylab.array(values[-100:]))
-  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),50,100])
+  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),0,1024])
   manager.canvas.draw()
   #manager.show()
 
