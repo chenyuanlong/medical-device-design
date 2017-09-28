@@ -7,8 +7,8 @@ import time
 from pylab import *
 #from hrm_demo import getHR
 
-xAchse=pylab.arange(0,100,1)
-yAchse=pylab.array([0]*100)
+xAchse=pylab.arange(0,50,1)
+yAchse=pylab.array([0]*50)
 
 fig = pylab.figure(1)
 ax = fig.add_subplot(111)
@@ -16,13 +16,13 @@ ax.grid(True)
 ax.set_title("Realtime Heart Rate Waveform")
 ax.set_xlabel("Time")
 ax.set_ylabel("Amplitude")
-ax.axis([0,100,0,1024])
+ax.axis([0,50,0,200])
 line1=ax.plot(xAchse,yAchse,'-')
 
 manager = pylab.get_current_fig_manager()
 
 values=[]
-values = [0 for x in range(100)]
+values = [0 for x in range(50)]
 
 Ta=0.01
 fa=1.0/Ta
@@ -51,8 +51,7 @@ def SinwaveformGenerator(arg):
   global values,T1,constant,T0,i
   #ohmegaCos=arccos(T1)/Ta
   #print("fcos=", ohmegaCos/(2*pi), "Hz")
-  
-  #hr acquisition code
+
   gt.sendline("char-read-hnd 0x0029")
   #char-write-req 0x2a 0100
   gt.expect(r"Characteristic value/descriptor: .*", timeout=10)
@@ -67,13 +66,13 @@ def SinwaveformGenerator(arg):
   values.append(Tnext)
   T0=T1
   T1=Tnext
-  #time.sleep(1)#orig 0.25
+  #time.sleep(0.25)
 
 def RealtimePloter(arg):
   global values
-  CurrentXAxis=pylab.arange(len(values)-100,len(values),1)
-  line1[0].set_data(CurrentXAxis,pylab.array(values[-100:]))
-  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),0,1024])
+  CurrentXAxis=pylab.arange(len(values)-50,len(values),1)
+  line1[0].set_data(CurrentXAxis,pylab.array(values[-50:]))
+  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),0,200])
   manager.canvas.draw()
   #manager.show()
 
