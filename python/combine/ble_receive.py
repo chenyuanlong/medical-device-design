@@ -54,10 +54,11 @@ def SinwaveformGenerator(arg):
   
   #hr acquisition code
   gt.sendline("char-read-hnd 0x0029")
+  #char-write-req 0x2a 0100
   gt.expect(r"Characteristic value/descriptor: .*", timeout=10)
   hr = gt.after.decode().split('\n', 1)[0].split(' ', 1)[1].split(' ', 1)[1]
   hr = [x for x in hr]
-  hr = hr[3]+hr[4]+hr[0]+hr[1]
+  hr = hr[0]+hr[1]+hr[3]+hr[4]
   hr =  int("0x"+hr,16)
   print("The amplitude is: "+str(hr))
   Tnext = hr
@@ -66,7 +67,7 @@ def SinwaveformGenerator(arg):
   values.append(Tnext)
   T0=T1
   T1=Tnext
-  time.sleep(0.25)
+  #time.sleep(1)#orig 0.25
 
 def RealtimePloter(arg):
   global values

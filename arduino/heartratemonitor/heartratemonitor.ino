@@ -104,7 +104,6 @@ void setup(void)
   /* Add the Heart Rate Measurement characteristic */
   /* Chars ID for Measurement should be 1 */
   Serial.println(F("Adding the Heart Rate Measurement characteristic (UUID = 0x2A37): "));
-  //success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A37, PROPERTIES=0x10, MIN_LEN=2, MAX_LEN=3, VALUE=00-40"), &hrmMeasureCharId);
   success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A37, PROPERTIES=0x10, MIN_LEN=1, MAX_LEN=2, VALUE=00-00"), &hrmMeasureCharId);
     if (! success) {
     error(F("Could not add HRM characteristic"));
@@ -132,18 +131,16 @@ void setup(void)
 /** Send randomized heart rate data continuously **/
 void loop(void)
 {
-  int heart_rate = random(1024);
-  //int heart_rate = analogRead(A1);
-  //Serial.println(sensorValue);
-  //delay(20);
-  Serial.print(heart_rate, HEX);
+  //unsigned int amplitude = analogRead(A1);
+  unsigned int amplitude = random(0,1024);
+  String value = convert2Octet(amplitude);
 
   /* Command is sent when \n (\r) or println is called */
   /* AT+GATTCHAR=CharacteristicID,value */
   ble.print( F("AT+GATTCHAR=") );
   ble.print( hrmMeasureCharId );
-  ble.print( F(",0x") );
-  ble.println(heart_rate, HEX);
+  ble.print( F(","));
+  ble.println(value);
 
   /* Check if command executed OK */
   if ( !ble.waitForOK() )
@@ -152,5 +149,32 @@ void loop(void)
   }
 
   /* Delay before next measurement update */
-  delay(1000);
+  delay(100);
+}
+
+String convert2Octet(int input){
+  String data=String(input, HEX);
+  char charBuf[4];
+  String result="0";
+  int j = 3;
+  String dash = "-";
+  data.toCharArray(charBuf,4);
+  if (input<256){
+    j = 2;
+    dash="";
+    result="00-";
+     
+  }
+  if(input<15){
+    result="00-0";
+  }
+  for(int i=0; i<j; i++){
+    if(i==0){
+      result+=String(charBuf[i])+dash;
+    }
+    else{
+     result+=String(charBuf[i]);
+    }
+  }
+  return result;
 }
