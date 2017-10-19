@@ -4,9 +4,10 @@
 import pylab
 import pexpect
 import time
+import subprocess
 from pylab import *
 #from hrm_demo import getHR
-
+x=0
 xAchse=pylab.arange(0,50,1)
 yAchse=pylab.array([0]*50)
 
@@ -21,52 +22,22 @@ line1=ax.plot(xAchse,yAchse,'-')
 
 manager = pylab.get_current_fig_manager()
 
-values=[]
 values = [0 for x in range(50)]
 
-Ta=0.01
-fa=1.0/Ta
-fcos=3.5
+cmd = 'gatttool -b D3:E0:D2:08:2B:8F -t random --char-write-req -a 0x2a -n 0100 --listen'
+p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-constant=cos(2*pi*fcos*Ta)
-T0=1.0
-T1=constant
-
-#pexpect code
-addr = "D3:E0:D2:08:2B:8F"
-try:
- gt = pexpect.spawn("gatttool -b " + addr + " -t random --interactive")
- gt.expect(r"\[LE\]>")
- gt.sendline("connect")
- gt.expect(r"\[LE\]>")
- i = gt.expect(["Connection successful.", r"\[CON\]"], timeout=30)
- gt.expect(r"\[LE\]>", timeout=30)
-except pexpect.TIMEOUT:
- print("Connection timeout.")
-except KeyboardInterrupt:
- print("Received keyboard interrupt. Quitting cleanly.")
-#pexpect code
-
-def SinwaveformGenerator(arg):
-  global values,T1,constant,T0,i
-  #ohmegaCos=arccos(T1)/Ta
-  #print("fcos=", ohmegaCos/(2*pi), "Hz")
-
-  gt.sendline("char-read-hnd 0x0029")
-  #char-write-req 0x2a 0100
-  gt.expect(r"Characteristic value/descriptor: .*", timeout=10)
-  hr = gt.after.decode().split('\n', 1)[0].split(' ', 1)[1].split(' ', 1)[1]
-  hr = [x for x in hr]
-  hr = hr[0]+hr[1]+hr[3]+hr[4]
-  hr =  int("0x"+hr,16)
-  print("The amplitude is: "+str(hr))
-  Tnext = hr
-  #hr acquisition code
-  #Tnext=((constant*T1)*2)-T0
-  values.append(Tnext)
-  T0=T1
-  T1=Tnext
-  #time.sleep(0.25)
+def getData(arg):
+    global p
+    line = p.stdout.readline().decode("utf-8")
+    if('Characteristic' in line):
+        output = ''
+    else:
+        line = p.stdout.readline().decode("utf-8").split(' ')
+        output = line[5]+line[6]
+        output =  int("0x"+output,16)
+        values.append(output)
+        print("The amplitude is: "+str(output))
 
 def RealtimePloter(arg):
   global values
@@ -79,7 +50,7 @@ def RealtimePloter(arg):
 timer = fig.canvas.new_timer(interval=20)
 timer.add_callback(RealtimePloter, ())
 timer2 = fig.canvas.new_timer(interval=20)
-timer2.add_callback(SinwaveformGenerator, ())
+timer2.add_callback(getData, ())
 timer.start()
 timer2.start()
 

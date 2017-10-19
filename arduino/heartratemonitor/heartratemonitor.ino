@@ -41,6 +41,7 @@ void error(const __FlashStringHelper*err) {
 int32_t hrmServiceId;
 int32_t hrmMeasureCharId;
 int32_t hrmLocationCharId;
+unsigned int amplitude = 0;
 /**************************************************************************/
 /*!
     @brief  Sets up the HW an the BLE module (this function is called
@@ -129,10 +130,14 @@ void setup(void)
 }
 
 /** Send randomized heart rate data continuously **/
-void loop(void)
-{
+void loop(void){
+  if(amplitude>200){
+    amplitude=0;
+  }
   //unsigned int amplitude = analogRead(A1);
-  unsigned int amplitude = random(0,1024);
+  //unsigned int amplitude = random(0,200);
+  amplitude += 1;
+  
   String value = convert2Octet(amplitude);
 
   /* Command is sent when \n (\r) or println is called */
@@ -141,21 +146,21 @@ void loop(void)
   ble.print( hrmMeasureCharId );
   ble.print( F(","));
   ble.println(value);
+  Serial.println(amplitude);
 
   /* Check if command executed OK */
-  if ( !ble.waitForOK() )
-  {
+  if ( !ble.waitForOK() ){
     Serial.println(F("Failed to get response!"));
   }
 
   /* Delay before next measurement update */
-  delay(100);
+  delay(10);
 }
 
 String convert2Octet(int input){
   String data=String(input, HEX);
   char charBuf[4];
-  String result="0";
+  String result = "0";
   int j = 3;
   String dash = "-";
   data.toCharArray(charBuf,4);
@@ -165,7 +170,7 @@ String convert2Octet(int input){
     result="00-";
      
   }
-  if(input<15){
+  if(input<16){
     result="00-0";
   }
   for(int i=0; i<j; i++){
