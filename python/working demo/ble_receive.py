@@ -14,10 +14,10 @@ yAchse=pylab.array([0]*50)
 fig = pylab.figure(1)
 ax = fig.add_subplot(111)
 ax.grid(True)
-ax.set_title("Realtime Heart Rate Waveform")
+ax.set_title("Patient Z - Realtime Heart Rate Waveform")
 ax.set_xlabel("Time")
 ax.set_ylabel("Amplitude")
-ax.axis([0,50,0,200])
+ax.axis([0,50,0,300])
 line1=ax.plot(xAchse,yAchse,'-')
 
 manager = pylab.get_current_fig_manager()
@@ -57,7 +57,6 @@ def getData(arg):
          output = line.split(' ')
          for i in output:
           if i!='':
-           #values.append(int(i))
            output = [x for x in i.split('\n') if x!='']
            values.extend(output)
            #print(output)
@@ -67,13 +66,13 @@ def RealtimePloter(arg):
   global values
   CurrentXAxis=pylab.arange(len(values)-50,len(values),1)
   line1[0].set_data(CurrentXAxis,pylab.array(values[-50:]))
-  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),0,200])
+  ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),0,300])
   manager.canvas.draw()
   #manager.show()
 
-timer = fig.canvas.new_timer(interval=100)
+timer = fig.canvas.new_timer(interval=1)
 timer.add_callback(RealtimePloter, ())
-timer2 = fig.canvas.new_timer(interval=100)
+timer2 = fig.canvas.new_timer(interval=1)
 timer2.add_callback(getData, ())
 timer.start()
 timer2.start()
