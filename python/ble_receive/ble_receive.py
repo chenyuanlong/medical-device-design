@@ -7,10 +7,10 @@ import time
 import subprocess
 from pylab import *
 #from hrm_demo import getHR
+
 x=0
 xAchse=pylab.arange(0,50,1)
 yAchse=pylab.array([0]*50)
-
 fig = pylab.figure(1)
 ax = fig.add_subplot(111)
 ax.grid(True)
@@ -19,15 +19,12 @@ ax.set_xlabel("Time")
 ax.set_ylabel("Amplitude")
 ax.axis([0,50,0,300])
 line1=ax.plot(xAchse,yAchse,'-')
-
 manager = pylab.get_current_fig_manager()
-
 values = [0 for x in range(50)]
-
-#cmd = 'gatttool -b D3:E0:D2:08:2B:8F -t random --char-write-req -a 0x2a -n 0100 --listen'
 cmd = 'gatttool -b D3:E0:D2:08:2B:8F -t random --char-write-req -a 0x23 -n 0100 --listen'
 p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 temp = []
+
 def getData(arg):
     global p,temp
     line = p.stdout.readline().decode("utf-8")
@@ -46,6 +43,10 @@ def getData(arg):
            #values.append(int(i))
            output = [x for x in i.split('\n') if x!='']
            values.extend(output)
+           with open("patient_z_graph_110917.txt", "a") as f:
+            for i in output:
+             f.write(i)
+             f.write(",")
            #print(output)
         else:
          #last space character in list
@@ -59,6 +60,10 @@ def getData(arg):
           if i!='':
            output = [x for x in i.split('\n') if x!='']
            values.extend(output)
+           with open("patient_z_graph_110917.txt", "a") as f: 
+            for i in output:
+             f.write(i)
+             f.write(",")
            #print(output)
 
 
@@ -70,9 +75,9 @@ def RealtimePloter(arg):
   manager.canvas.draw()
   #manager.show()
 
-timer = fig.canvas.new_timer(interval=1)
+timer = fig.canvas.new_timer(interval=10)
 timer.add_callback(RealtimePloter, ())
-timer2 = fig.canvas.new_timer(interval=1)
+timer2 = fig.canvas.new_timer(interval=10)
 timer2.add_callback(getData, ())
 timer.start()
 timer2.start()
