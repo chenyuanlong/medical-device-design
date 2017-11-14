@@ -238,22 +238,42 @@ int timings[16];
 
 long previousMillis = 0;
 long previousMillis2 = 0;
-long rawsigInterval = 10;
-long hrInterval = 2000;
+long previousMillis3 = 0;
+long rawsigInterval = 20;
+long hrInterval = 1000;
+long graphInterval = 20;
+bool blankDisplayState = false;
 
 void loop(void){
+  bool isBLEconn;
+  if(ble.isConnected()){
+    isBLEconn = true;
+  }
+  else{
+    isBLEconn = false;
+    blankDisplayState = false;
+  }
+  if(!blankDisplayState && isBLEconn){
+    blankDisplay();
+    blankDisplayState = true;
+  }
+  
   unsigned int rawSignal = analogRead(firstStagePin);
   unsigned int pulseSignal = analogRead(SecondStagePin);
   unsigned long currentMillis = millis();
 
   if(currentMillis - previousMillis > rawsigInterval) {
     previousMillis = currentMillis;
-    //Serial.print("Sending: ");
-    //Serial.println(rawSignal);
     ble.print(rawSignal);
     ble.print("\n");
   }
-  //graphDisplay(rawSignal); //fix graph plotting
+  
+  if(!isBLEconn){
+    if(currentMillis - previousMillis3 > graphInterval) {
+      previousMillis3 = currentMillis;
+      graphDisplay(rawSignal);
+    }
+  }
   
   oldvalue = newvalue;
   newvalue = 0;
@@ -275,16 +295,17 @@ void loop(void){
     }
     // calculate heart rate
     heartrate = 60000/(totalmillis/16);
-    if(40<heartrate && heartrate<200){
-      //Serial.print("Heart Rate: ");
-      //Serial.println(heartrate,DEC);
-      if(currentMillis - previousMillis2 > hrInterval){
-        previousMillis2 = currentMillis;
+    if(heartrate<40){
+      heartrate = 0;
+      if(!isBLEconn){
         hrDisplay(heartrate);
-  }
+      }
     }
-    else{
-      Serial.println("Detecting...");
+    if(currentMillis - previousMillis2 > hrInterval){
+      previousMillis2 = currentMillis;
+      if(!isBLEconn){
+        hrDisplay(heartrate);
+      }
     }
     cnt++;
   }
@@ -317,25 +338,37 @@ void graphDisplay(int amplitude){
   }
   int value = amplitude;
   display.setTextColor(WHITE);
-  int y=60-(value/16);
+  //int y = 50-(value/16);
+  int y = 50-(value/4);
   display.writeLine(lastx,lasty,x,y,WHITE);
   lasty=y;
   lastx=x;
+  display.display();
   x++;
 }
 
-void hrDisplay(int BPM){  
-  //display bpm
+void hrDisplay(int BPM){
   display.writeFillRect(0,50,128,16,BLACK);
   display.setTextSize(2);
   display.setTextColor(WHITE);
   display.setCursor(0,50);
-  display.print("BPM: ");
-  display.print(BPM);
+  if(BPM==0){
+    display.print("No pulse!");
+  }
+  else if(BPM>200){
+    display.print("BPM: ");
+    display.print(BPM);
+    display.print("!!");
+  }
+  else{
+    display.print("BPM: ");
+    display.print(BPM);
+  }  
   display.display();    
 }
 
-//for screen blanking
-  /*display.clearDisplay();
+void blankDisplay(){
+  display.clearDisplay();
   display.drawBitmap(0, 0,  blank, 1, 1, 1);
-  display.display();*/
+  display.display(); 
+}
